@@ -79,7 +79,14 @@
 					</p>
 				</td>
 				<td>
-					<p class="h6dummy"><button class="btn btn-success" id="createEditButton" type="button" onclick="createUser()">Create User</button></p>
+					<p class="h6dummy">
+						<div class="viewOnly">
+							<button class="btn btn-primary" id="createButton" type="button" onclick="createUser()">Create User</button>
+						</div>
+						<div class="editOnly" style="display:none">
+							<button class="btn btn-success" id="createButton" type="button" onclick="updateUser()">Edit User</button>
+						</div>
+					</p>
 				</td>
 			</tr>
 			<tr>
@@ -95,11 +102,13 @@
 	var userId = urlVars['id'];
 	var roleBtn = document.getElementById('roleDropdownBtn');
 	var deleteUserButton = document.getElementById('deleteUserButton');
-	var createEditBtn = document.getElementById('createEditButton');
+	var viewOnly = document.getElementsByClassName('viewOnly');
+	var editOnly = document.getElementsByClassName('editOnly');
+
 	var currentUserRole = top.testflow.user.role;
 	
 	if(userId){
-		switchMode('view');
+		switchMode('edit');
 		sendRequest({action:"get User", their_id: userId}, loadUserData);
 	}
 	
@@ -110,9 +119,12 @@
 				roleBtn.setAttribute('data-toggle','');
 				roleBtn.classList.remove('dropdown-toggle');
 				
-				createEditBtn.classList.replace('btn-success','btn-primary');				
-				createEditBtn.innerText = 'Edit User';
-				createEditBtn.setAttribute('onclick', 'switchMode("edit")');
+				for(var i=0;i<viewOnly.length;i++){
+					viewOnly[i].style.display = '';
+				}
+				for(var i=0;i<editOnly.length;i++){
+					editOnly[i].style.display = 'none';
+				}
 				
 				if(currentUserRole != 'admin'){
 					document.getElementById('firstname').setAttribute('disabled','true');
@@ -127,11 +139,13 @@
 				}else{
 					document.getElementById('firstname').setAttribute('disabled','true');
 					document.getElementById('lastname').setAttribute('disabled','true');
-					//document.getElementById('username').setAttribute('disabled','true');
-					//document.getElementById('password').setAttribute('disabled','true');
 				}
-				createEditBtn.innerText = 'Save User';
-				createEditBtn.setAttribute('onclick', 'updateUser()');
+				for(var i=0;i<viewOnly.length;i++){
+					viewOnly[i].style.display = 'none';
+				}
+				for(var i=0;i<editOnly.length;i++){
+					editOnly[i].style.display = '';
+				}
 				break;
 			default:
 				console.log('Switchable mode for' + mode + 'is not defined');
