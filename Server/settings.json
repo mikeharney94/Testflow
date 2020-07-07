@@ -1,0 +1,9 @@
+{
+	"license":"",
+	"serverPath":"http://desktop-ba6a8lj",
+	"database": {
+		"host":"localhost",
+		"user":"root",
+		"password":"pass@word1"
+	}
+}

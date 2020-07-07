@@ -1,0 +1,200 @@
+<html>
+<head>
+     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+	<script src="..\scripts\generalLibrary.js"></script>
+	<script src="..\scripts\requestSender.js"></script>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<style>
+	.column{
+		text-align: center;
+		float:left;
+		margin-right:10px;
+		padding:10px;
+	}
+	h6{
+		text-align:left;
+	}
+	body{
+		text-align:center;
+	}
+	.h6dummy{
+		margin-top:27px;
+	}
+	</style>
+</head>
+<body>
+	<div style="display:inline-block;margin-top:75px">
+		<div class="column" style="margin-right:50px">
+			<h1 id="pageTitle">Create a new User</h1>
+			<i class="fas fa-user-circle fa-10x" style="color:#233E73;background-color:#fff"></i>
+		</div>
+		<table>
+			<tr>
+				<td>
+					<h6>First Name:</h6>
+					<p><input id="firstname" type="text" /></p>
+				</td>
+				<td>
+					<h6>Last Name:</h6>
+					<p><input id="lastname" type="text" /></p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<h6>Username:</h6>
+					<p><input id="username" type="text" /></p>
+				</td>
+				<td>
+					<h6>Password:</h6>
+					<p><input id="password" type="password" /></p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<h6>Role</h6>
+					<p>
+						<div class="dropdown" id="roleDropdown">
+						  <button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select a role</button>
+						  <div class="dropdown-menu" aria-labelledby="roleDropdownBtn">
+							<a class="dropdown-item" onclick="setBootstrapButtonText(this,this.innerText)">Student</a>
+							<a class="dropdown-item" onclick="setBootstrapButtonText(this,this.innerText)">Teacher</a>
+							<a class="dropdown-item" onclick="setBootstrapButtonText(this,this.innerText)">Admin</a>
+						  </div>
+						</div>
+					</p>
+				</td>
+				<td>
+					<p class="h6dummy"><button class="btn btn-success" id="createEditButton" type="button" onclick="createUser()">Create User</button></p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p class="h6dummy"><button class="btn btn-danger" style="display:none" id="deleteUserButton" type="button" onclick="deleteUser()">Delete User</button></p>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+<script>
+	var urlVars = getUrlVars();
+	var userId = urlVars['id'];
+	var roleBtn = document.getElementById('roleDropdownBtn');
+	var deleteUserButton = document.getElementById('deleteUserButton');
+	var createEditBtn = document.getElementById('createEditButton');
+	var currentUserRole = top.testflow.user.role;
+	
+	if(userId){
+		switchMode('view');
+		sendRequest({action:"get User", their_id: userId}, loadUserData);
+	}
+	
+	function switchMode(mode){
+		switch(mode){
+			case 'view':
+				deleteUserButton.style.display = 'none';
+				roleBtn.setAttribute('data-toggle','');
+				roleBtn.classList.remove('dropdown-toggle');
+				
+				createEditBtn.classList.replace('btn-success','btn-primary');				
+				createEditBtn.innerText = 'Edit User';
+				createEditBtn.setAttribute('onclick', 'switchMode("edit")');
+				
+				if(currentUserRole != 'admin'){
+					document.getElementById('firstname').setAttribute('disabled','true');
+					document.getElementById('lastname').setAttribute('disabled','true');
+				}
+				break;
+			case 'edit':
+				if(currentUserRole == 'admin'){
+					deleteUserButton.style.display = '';
+					roleBtn.setAttribute('data-toggle','dropdown');
+					roleBtn.classList.add('dropdown-toggle');
+				}else{
+					document.getElementById('firstname').setAttribute('disabled','true');
+					document.getElementById('lastname').setAttribute('disabled','true');
+					//document.getElementById('username').setAttribute('disabled','true');
+					//document.getElementById('password').setAttribute('disabled','true');
+				}
+				createEditBtn.innerText = 'Save User';
+				createEditBtn.setAttribute('onclick', 'updateUser()');
+				break;
+			default:
+				console.log('Switchable mode for' + mode + 'is not defined');
+		}
+	}
+	
+	function createUser(){
+		var role = document.getElementById('roleDropdownBtn').innerText.toLowerCase();
+		if(role == 'select a role'){
+			alert('Please select a role before saving the new user');
+			return;
+		}
+		sendRequest({
+			action:'add User',
+			their_username: document.getElementById('username').value,
+			their_password: document.getElementById('password').value,
+			firstname: document.getElementById('firstname').value,
+			lastname: document.getElementById('lastname').value,
+			role: document.getElementById('roleDropdownBtn').innerText.toLowerCase()
+		}, afterUserCreated);
+	}
+	
+	function updateUser(){
+		sendRequest({
+			action:'update User',
+			their_id: userId,
+			their_username: document.getElementById('username').value,
+			their_password: document.getElementById('password').value,
+			firstname: document.getElementById('firstname').value,
+			lastname: document.getElementById('lastname').value,
+			role: document.getElementById('roleDropdownBtn').innerText.toLowerCase()
+		}, afterUserUpdated);
+	}
+	
+	function deleteUser(){
+		if(confirm('Are you sure?')){
+			sendRequest({
+					action:'delete User',
+					their_id: userId
+			}, afterUserDeleted);
+		}
+	}
+	
+	function loadUserData(data, textStatus, jqXHR){
+		document.getElementById('firstname').value = data[0]["firstname"];
+		document.getElementById('lastname').value = data[0]["lastname"];
+		document.getElementById('username').value = data[0]["username"];
+		document.getElementById('password').value = data[0]["password"];
+		document.getElementById('roleDropdownBtn').innerText = data[0]["role"];
+		
+		document.getElementById('pageTitle').innerText = data[0]["firstname"] + " " + data[0]["lastname"];
+	}
+	
+	//callbacks
+	function afterUserCreated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=users';
+	}
+	function afterUserUpdated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=users';
+	}
+	function afterUserDeleted(){
+		alert('The user has been successfully deleted');
+		frameElement.src = 'Client/pages/searchGrid.html?table=users';
+	}
+</script>
+</html>

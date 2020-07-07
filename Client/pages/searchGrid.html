@@ -1,0 +1,143 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+	<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+	<script src="..\scripts\requestSender.js"></script>
+	<script src="..\scripts\generalLibrary.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
+	<style>
+	#tableContent{
+		padding-left: 100px;
+		padding-right: 100px;
+		margin-top: 65px;
+	}
+	h1{
+		border-bottom: 1px solid grey;
+		margin-bottom: 15px;
+	}
+	#searchGrid_filter{
+		text-align: center;
+	}
+	.inlineDiv{
+		display: inline-block;
+	}
+	</style>
+		<script>
+	var urlVars = getUrlVars();
+	var isModal = urlVars['modal'] == 'true';
+		
+	$(document).ready(function() {
+		if(isModal){
+			var tableSection = document.getElementById('tableContent');
+			tableSection.style.paddingLeft = '0px';
+			tableSection.style.paddingRight = '0px';
+			
+		}else{
+			document.getElementById('labelText').innerText = top.testflow.getTableLabel(urlVars['table']);
+		}
+		createDataTable();
+	} );
+	function createDataTable(){
+		console.log('creating data table');
+		if(document.getElementById('searchGrid')){
+			$('#searchGrid').DataTable();
+		}else{
+			setTimeout(createDataTable, 500);
+		}
+	}
+	function getUrlVars() {
+		var vars = {};
+		var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+			vars[key] = value;
+		});
+		return vars;
+	}
+	
+	function createNewItem(){
+		frameElement.src="Client/pages/"+urlVars['table']+".html";
+	}
+	
+	function openItem(el){
+		frameElement.src="Client/pages/"+urlVars['table']+".html?id="+el.id;
+	}
+	
+	var getItemsSuccess = function(items){
+		var columns = [];
+		
+		var searchGrid = document.createElement("table");
+		searchGrid.id = "searchGrid";
+		searchGrid.className = "table table-striped table-bordered";
+		searchGrid.style.width = "100%";
+
+		var headerRow = document.createElement('tr');
+		
+		if(items.length > 0){
+			Object.keys(items[0]).forEach(function(key) {
+				if(key != "id"){
+					var cell = document.createElement('th');
+					cell.innerText = key;
+					headerRow.appendChild(cell);
+					columns.push(key);
+				}
+			});
+		}else{
+			top.throwError('No items retrieved');
+		}
+		var thead = document.createElement('thead');
+		thead.appendChild(headerRow);
+		searchGrid.appendChild(thead);
+		var tbody = document.createElement('tbody');
+		searchGrid.appendChild(tbody);
+		
+		for(var i=0;i<items.length;i++){
+			var row = document.createElement('tr');
+			var itemId = items[i].id;
+			if(!itemId){
+				continue;
+			}
+			row.id = itemId;
+			if(isModal){
+				row.addEventListener('dblclick', function(){ callModalMethod('searchGrid', this); });
+			}else{
+				row.addEventListener('dblclick', function(){ openItem(this); });
+			}
+			for(var j=0;j<columns.length;j++){
+				var cell = document.createElement('td');
+				cell.innerText = items[i][columns[j]];
+				row.appendChild(cell);
+			}
+			tbody.appendChild(row);
+		}
+
+		document.getElementById('tableContent').appendChild(searchGrid);
+	}
+	
+	sendRequest({
+		action:"searchGrid "+urlVars['table']},	getItemsSuccess);
+	</script>
+</head>
+		<body>
+			<div id="tableContent">
+				<h1 id="searchPageHeader">
+					<div style="text-align:center;padding-bottom:10px">
+						<div class="inlineDiv" id="labelText" style="float:left"></div>
+						<div class="inlineDiv">
+							<button class="btn btn-primary" onclick="createNewItem()">Create New</button>
+						</div>
+					</div>
+				</h1>
+			</div>
+		</body>
+		<script>
+	if(isModal){
+		var header = document.getElementById('searchPageHeader');
+		header.parentElement.removeChild(header);
+	}
+		</script>
+</html>

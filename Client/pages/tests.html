@@ -1,0 +1,307 @@
+<html>
+<head>
+     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+	
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+    <!--<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+	<!-- Font Awesome JS -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+	<script src="..\scripts\generalLibrary.js"></script>
+	<script src="..\scripts\requestSender.js"></script>
+  <!--<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
+  <style>
+	body{
+		text-align:center;
+	}
+	.left{
+		float:left;
+		padding:30px;
+	}
+	.right{
+		float:right;
+		padding:30px;
+	}
+	.modal-dialog{
+		max-width: 800px;
+	}
+  </style>
+</head>
+<body>
+	<div style="display:inline-block;margin-top:75px">
+		<div class="left">
+			<i class="far fa-file-alt fa-8x" style="color:#233E73;background-color:#fff"></i>
+			<h6>Name</h6>
+			<input id="name" type="text"></input>
+		</div>
+		<div class="right">
+			<button class="btn btn-primary" type="button" data-toggle="modal" data-target="#testQuestionModal">New Test Question</button>
+			<table id="testQuestionTable" align="center" class="testQuestionGrid table table-striped table-bordered" style="margin-top:30px">
+				<tbody id="testQustionGridBody">
+					<tr>
+						<th>Name</th>
+						<th>Operator</th>
+						<th>Rating</th>
+						<th>Order</th>
+						<th>Remove</th>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div>
+			<p class="viewMode">
+				<button class="btn btn-success" type="button" onclick="updateTest()">Update Test</button>
+				<button class="btn btn-danger" type="button" onclick="deleteTest()">Delete Test</button>
+			</p>
+			<p class="createMode">
+				<button class="btn btn-primary" type="button" onclick="createTest()">Create Test</button>
+			</p>
+		</div>
+	</div>
+</body>
+<script>
+	var urlVars = getUrlVars();
+	var itemId = urlVars['id'];
+	var testQuestionsToDelete = [];
+	var ratingCellHTML;
+	
+	sendRequest({action:"searchGrid ratings", userId:top.testflow.user.id }, setRatingsButtonHTML);
+	
+	if(itemId){
+		switchMode('view');
+		sendRequest({action:"get Test", id: itemId}, loadTestData);
+	}else{
+		switchMode('create');
+	}
+	
+	$(document).ready(function() {
+		$('#testQuestionGrid').DataTable();
+	} );
+	
+	function switchMode(mode){
+		var showItems, displayItems;
+		switch(mode){
+			case 'create':
+				hideItems = document.getElementsByClassName('viewMode');
+				showItems = document.getElementsByClassName('createMode');
+				break;
+			case 'view':
+				hideItems = document.getElementsByClassName('createMode');
+				showItems = document.getElementsByClassName('viewMode');
+				break;
+			default:
+				console.log('Switchable mode for' + mode + 'is not defined');
+				return;
+		}
+		for(var i=0;i<showItems.length;i++){
+			showItems[i].style.display = '';
+		}
+		for(var i=0;i<hideItems.length;i++){
+			hideItems[i].style.display = 'none';
+		}
+	}
+	
+	function createTest(){
+		var testName = document.getElementById('name').value;
+		var testQuestionsToAdd = [];
+		var rows = document.getElementsByTagName('tr');
+		if(rows.length == 1){
+			top.displayNotification('Please add at least one question to the test');
+			return;
+		}
+		for(var i=1;i<rows.length;i++){
+			var questionId = rows[i].questionId;
+			var operator = rows[i].cells[1].innerText;
+			if(operator == "Select Rating"){
+				top.throwError('You must select a valid rating');
+				return;
+			}
+			var difficultyId = rows[i].cells[2].getElementsByClassName('btn btn-secondary dropdown-toggle')[0].id;
+			var orderNumber = rows[i].cells[3].innerText;
+			if(!isNumber(orderNumber)){
+				top.displayNotification('Make sure each Order value has a valid numeric entry');
+				return;
+			}
+			testQuestionsToAdd.push({questionId:questionId, difficultyId:difficultyId, order:orderNumber, operator:operator});
+		}
+		sendRequest({
+			action:'add Test',
+			name: testName,
+			testQuestionsToAdd: testQuestionsToAdd,
+		}, afterTestCreated);
+	}
+	
+	function updateTest(){
+		var testName = document.getElementById('name').value;
+		var testQuestionsToAdd = [];
+		var testQuestionsToUpdate = [];
+		var rows = document.getElementsByTagName('tr');
+		if(rows.length == 1){
+			top.displayNotification('The test must have at least one question');
+			return;
+		}
+		for(var i=1;i<rows.length;i++){
+			var testQuestionId = rows[i].id;
+			var questionId = rows[i].questionId;
+			var operator = rows[i].cells[1].innerText;
+			var difficultyId = rows[i].cells[2].getElementsByClassName('btn btn-secondary dropdown-toggle')[0].id;
+			var orderNumber = rows[i].cells[3].innerText;
+			if(!isNumber(orderNumber)){
+				top.displayNotification('Make sure each Order value has a valid numeric entry');
+				return;
+			}
+			if(testQuestionId){
+				testQuestionsToUpdate.push({id:testQuestionId, questionId:questionId, difficultyId:difficultyId, order:orderNumber, operator:operator});
+			}else{
+				testQuestionsToAdd.push({questionId:questionId, difficultyId:difficultyId, order:orderNumber, operator:operator});
+			}
+		}
+		sendRequest({
+			action:'update Test',
+			name: testName,
+			id: itemId,
+			testQuestionsToAdd: testQuestionsToAdd,
+			testQuestionsToUpdate: testQuestionsToUpdate,
+			testQuestionsToDelete: testQuestionsToDelete
+		}, afterTestUpdated);
+	}
+	
+	function deleteTest(){
+		if(confirm('Are you sure?')){
+			sendRequest({
+					action:'delete Test',
+					id: itemId
+			}, afterTestDeleted);
+		}
+	}
+	
+	function loadTestData(data, textStatus, jqXHR){
+		var testData = data[0][0];
+		var questionData = data[1];
+		
+		document.getElementById('name').value = testData["name"];
+		
+		for(var i=0;i<questionData.length;i++){
+			var question = questionData[i];
+			addTestQuestionRow([[question]]);
+		}
+	}
+	
+	function returnModalResult(modalName, row){
+		if(modalName == 'testFrame'){
+			closeModalById('testQuestionModal');
+			sendRequest({action:"get Question", questionId: row.id}, addTestQuestionRow);
+		}
+	}
+	
+	//callbacks
+	function afterTestCreated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=tests';
+	}
+	function afterRaTestUpdated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=tests';
+	}
+	function afterTestDeleted(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=tests';
+	}
+	function setRatingsButtonHTML(data){
+		ratingCellHTML = '';
+		ratingCellHTML = '<div class="dropdown">'+
+								'<button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select Rating</button>'+
+								'<div class="dropdown-menu" aria-labelledby="roleDropdownBtn">';
+		for(var i=0;i<data.length;i++){
+			ratingCellHTML += '<a id="'+data[i].id+'" class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">'+ data[i].Name + '</a>';
+		}
+		ratingCellHTML += '</div></div>';
+	}
+	function addTestQuestionRow(data, isNew){ //if isNew, data is question. if notNew, data is testQuestion
+		var testquestion = data[0][0];
+		var row = document.createElement('tr');
+		if(isNew){
+			row.questionId = testquestion.id;
+		}else{
+			row.questionId = testquestion.question_id;
+		}
+		var name = document.createElement('td');
+		name.innerText = testquestion.name;
+		row.appendChild(name);
+		
+		var operator = document.createElement('td');
+		var dropdown = createElementFromHTML('<div class="dropdown">'+
+								'<button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select Operator</button>'+
+								'<div class="dropdown-menu" aria-labelledby="roleDropdownBtn">'+
+								'<a class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">Less than</a>'+
+								'<a class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">Less than or equal to</a>'+
+								'<a class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">Equal To</a>'+
+								'<a class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">Greater than or equal to</a>'+
+								'<a class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">Greater than</a>');
+
+		operator.appendChild(dropdown);
+		row.appendChild(operator);
+		
+		var rating = document.createElement('td');
+		row.appendChild(rating);
+		rating.innerHTML = ratingCellHTML;		
+		
+		var order = document.createElement('td');
+		order.setAttribute('contenteditable','true');
+		row.appendChild(order);
+
+		if(!isNew){
+			dropdown.getElementsByTagName('button')[0].innerText = testquestion.operator;
+			rating.getElementsByTagName('button')[0].innerText = testquestion.rating;
+			rating.getElementsByTagName('button')[0].id = testquestion.rating_id;
+			order.innerText = testquestion.order_number;
+			row.id = testquestion.id;
+			row.question_id = testquestion.question_id;
+		}
+		
+		var remove = document.createElement('td');
+		var removeBtn = document.createElement('button');
+		removeBtn.className = 'btn btn-danger';
+		removeBtn.innerText = 'Remove Question';
+		removeBtn.addEventListener('click', function(){ deleteQuestionRow(this); });
+		remove.appendChild(removeBtn);
+		row.appendChild(remove);
+		
+		document.getElementById('testQuestionTable').appendChild(row);
+	}
+	
+	function deleteQuestionRow(btn){
+		var row = btn.parentElement.parentElement;
+		var rowId = row.id;
+		row.parentElement.removeChild(row);
+		if(rowId){
+			testQuestionsToDelete.push(row.id);
+		}
+	}
+</script>
+	<div class="modal fade" id="testQuestionModal" tabindex="-1" role="dialog" aria-labelledby="testQuestionModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="testQuestionModalName">Test Question</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div id="testQuestionModal-body" class="modal-body">
+			<iframe id="testFrame" src="searchGrid.html?table=questions&modal=true" style="width:100%;height:400px"></iframe>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-primary" onclick="addFieldFromModal('testQuestion')" data-dismiss="modal">Add Question</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+</html>

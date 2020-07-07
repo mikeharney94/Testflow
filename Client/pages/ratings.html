@@ -1,0 +1,136 @@
+<html>
+<head>
+     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+	<script src="..\scripts\generalLibrary.js"></script>
+	<script src="..\scripts\requestSender.js"></script>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <style>
+	body{
+		text-align:center;
+	}
+  </style>
+</head>
+<body>
+	<div style="display:inline-block;margin-top:75px">
+		<div class="column">
+			<h1 id="pageTitle"></h1>
+		</div>
+		<table align="center" style="margin-top:30px">
+			<tr>
+				<td>
+					<h6>Name:</h6>
+					<p><input id="name" type="text" /></p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<h6>Value:</h6>
+					<p><input id="value" type="number"/></p>
+				</td>
+			</tr>
+			<tr style="text-align:center">
+				<td>
+					<p>
+						<button class="btn btn-primary" style="display:none" id="createRatingButton" type="button" onclick="createRating()">Create Rating</button>
+						<button class="btn btn-success" style="display:none" id="updateRatingButton" type="button" onclick="updateRating()">Update Rating</button>
+						<button class="btn btn-danger" style="display:none" id="deleteRatingButton" type="button" onclick="deleteRating()">Delete Rating</button>
+					</p>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+<script>
+	var urlVars = getUrlVars();
+	var itemId = urlVars['id'];
+	var createRatingButton = document.getElementById('createRatingButton');
+	var updateRatingButton = document.getElementById('updateRatingButton');
+	var deleteRatingButton = document.getElementById('deleteRatingButton');
+	
+	if(itemId){
+		switchMode('view');
+		sendRequest({action:"get Rating", rating_id: itemId}, loadRatingData);
+	}else{
+		switchMode('create');
+	}
+	
+	function switchMode(mode){
+		switch(mode){
+			case 'view':
+				createRatingButton.style.display = 'none';
+				updateRatingButton.style.display = '';
+				deleteRatingButton.style.display = '';
+				break;
+			case 'create':
+				createRatingButton.style.display = '';
+				updateRatingButton.style.display = 'none';
+				deleteRatingButton.style.display = 'none';
+				document.getElementById('pageTitle').innerText = 'Create a new Rating';
+				break;
+			default:
+				console.log('Switchable mode for' + mode + 'is not defined');
+		}
+	}
+	
+	function createRating(){
+		var name = document.getElementById('name').value;
+		var value = document.getElementById('value').value;
+		if(name == '' || value== ''){
+			top.displayNotification('Please fill in all required fields before creating a rating');
+			return;
+		}
+		sendRequest({
+			action:'add Rating',
+			name: name,
+			value: value
+		}, afterRatingCreated);
+	}
+	
+	function updateRating(){
+		sendRequest({
+			action:'update Rating',
+			rating_id: itemId,
+			name: document.getElementById('name').value,
+			value: document.getElementById('value').value
+		}, afterRatingUpdated);
+	}
+	
+	function deleteRating(){
+		if(confirm('Are you sure?')){
+			sendRequest({
+					action:'delete Rating',
+					rating_id: itemId
+			}, afterRatingDeleted);
+		}
+	}
+	
+	function loadRatingData(data, textStatus, jqXHR){
+		document.getElementById('name').value = data[0]["name"];
+		document.getElementById('value').value = data[0]["value"];		
+		document.getElementById('pageTitle').innerText = document.getElementById('name').value;
+	}
+	
+	//callbacks
+	function afterRatingCreated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=ratings';
+	}
+	function afterRatingUpdated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=ratings';
+	}
+	function afterRatingDeleted(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=ratings';
+		//top.displayNotification('The rating has been successfully deleted','Client/pages/searchGrid?table=ratings');
+	}
+</script>
+</html>

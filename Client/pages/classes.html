@@ -1,0 +1,380 @@
+<html>
+<head>
+     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+	
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+    <!--<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+	<!-- Font Awesome JS -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+	<script src="..\scripts\generalLibrary.js"></script>
+	<script src="..\scripts\requestSender.js"></script>
+  <!--<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
+  <style>
+	body{
+		text-align:center;
+	}
+	.left{
+		float:left;
+		padding:30px;
+	}
+	.right{
+		float:right;
+		padding:30px;
+	}
+	.modal-dialog{
+		max-width: 800px;
+	}
+  </style>
+</head>
+<body>
+	<div style="display:inline-block;margin-top:75px">
+		<div class="left">
+			<i class="fa fa-users fa-8x" style="color:#233E73;background-color:#fff"></i>
+			<h6>Name</h6>
+			<input id="name" type="text"></input>
+			<p></p>
+			<h6>Teacher</h6>
+			<input id="teacher" type="text" readonly></input>
+			<p style="padding:15px" class="hideFromStudents">
+				<button class="btn btn-primary" data-toggle="modal" data-target="#teacherModal">Select Teacher</button>
+			</p>
+			
+		</div>
+		<div class="right">
+			<button class="btn btn-primary hideFromStudents" type="button" data-toggle="modal" data-target="#studentModal" style="margin-bottom:30px">New Class Member</button>
+			<div style="max-height:550px;min-height:200px;overflow:scroll">
+				<table id="formTable" align="center" class="formGrid table table-striped table-bordered">
+					<tbody id="testQustionGridBody">
+						<tr>
+							<th>Name</th>
+							<th class="hideFromStudents">Experience</th>
+							<th class="hideFromStudents">Removal</th>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div>
+			<p class="viewMode">
+				<button class="btn btn-success" type="button" onclick="updateClass()">Update Class</button>
+				<button class="btn btn-danger" type="button" onclick="deleteClass()">Delete Class</button>
+			</p>
+			<p class="createMode">
+				<button class="btn btn-primary" type="button" onclick="createClass()">Create Class</button>
+			</p>
+		</div>
+	</div>
+</body>
+<script>
+	var urlVars = getUrlVars();
+	var itemId = urlVars['id'];
+	var relationshipsToDelete = [];
+	var ratingCellHTML;
+	var role = top.testflow.user.role;
+	
+	sendRequest({action:"searchGrid ratings", userId:top.testflow.user.id }, setRatingsButtonHTML);
+	
+	if(itemId){
+		switchMode('view');
+		sendRequest({action:"get Class", id: itemId}, loadClassData);
+	}else{
+		switchMode('create');
+	}
+	
+	if(role != 'teacher' && role != 'admin'){
+		var hideItems = document.getElementsByClassName('hideFromStudents');
+		for(var i=0;i<hideItems.length;i++){
+			hideItems[i].style.display = 'none';
+		}	
+	}
+	
+	$(document).ready(function() {
+		$('#formGrid').DataTable();
+	} );
+	
+	function switchMode(mode){
+		var showItems, hideItems;
+		switch(mode){
+			case 'create':
+				hideItems = document.getElementsByClassName('viewMode');
+				showItems = document.getElementsByClassName('createMode');
+				break;
+			case 'view':
+				if(role == 'teacher' || role == 'admin'){
+					hideItems = document.getElementsByClassName('createMode');
+					showItems = document.getElementsByClassName('viewMode');
+				}
+				break;
+			default:
+				console.log('Switchable mode for' + mode + 'is not defined');
+				return;
+		}
+		for(var i=0;i<showItems.length;i++){
+			showItems[i].style.display = '';
+		}
+		for(var i=0;i<hideItems.length;i++){
+			hideItems[i].style.display = 'none';
+		}
+	}
+	
+	function createClass(){
+		var testName = document.getElementById('name').value;
+		var teacherId = document.getElementById('teacher').teacherId;
+		var relatedItemsToAdd = [];
+		var rows = document.getElementsByTagName('tr');
+		if(!teacherId){
+			top.displayNotification('The teacher must be specified');
+			return;
+		}
+		if(rows.length == 1){
+			top.displayNotification('Please add at least one class member to the Class');
+			return;
+		}
+		for(var i=1;i<rows.length;i++){
+			var student_id = rows[i].student_id;
+			var rating = rows[i].cells[1].innerText;
+			if(rating == "Select Rating"){
+				top.throwError('You must select a valid Experience level');
+				return;
+			}
+			var difficulty_id = rows[i].cells[1].getElementsByClassName('btn btn-secondary dropdown-toggle')[0].id;
+			relatedItemsToAdd.push({student_id:student_id, difficulty_id:difficulty_id});
+		}
+		sendRequest({
+			action:'add Class',
+			name: testName,
+			teacher_id: teacherId,
+			relatedItemsToAdd: relatedItemsToAdd,
+		}, afterClassCreated);
+	}
+	
+	function updateClass(){
+		var className = document.getElementById('name').value;
+		var teacherId = document.getElementById('teacher').teacherId;
+		var relationshipsToAdd = [];
+		var relationshipsToUpdate = [];
+		var rows = document.getElementsByTagName('tr');
+		if(rows.length == 1){
+			top.displayNotification('The class must have at least one student');
+			return;
+		}
+		for(var i=1;i<rows.length;i++){
+			var relationshipId = rows[i].id;
+			var related_id = rows[i].student_id;
+			var difficulty_id = rows[i].cells[1].getElementsByClassName('btn btn-secondary dropdown-toggle')[0].id;
+			var rating = rows[i].cells[1].innerText;
+			if(rating == "Select Rating"){
+				top.throwError('You must select a valid Experience level');
+				return;
+			}
+			if(relationshipId){
+				relationshipsToUpdate.push({id:relationshipId, related_id:related_id, difficulty_id:difficulty_id});
+			}else{
+				relationshipsToAdd.push({related_id:related_id, difficulty_id:difficulty_id});
+			}
+		}
+		sendRequest({
+			action:'update Class',
+			name: className,
+			id: itemId,
+			teacher_id: teacherId,
+			relationshipsToAdd: relationshipsToAdd,
+			relationshipsToUpdate: relationshipsToUpdate,
+			relationshipsToDelete: relationshipsToDelete
+		}, afterClassUpdated);
+	}
+	
+	function deleteClass(){
+		if(confirm('Are you sure?')){
+			sendRequest({
+					action:'delete Class',
+					id: itemId
+			}, afterClassDeleted);
+		}
+	}
+	
+	function loadClassData(data, textStatus, jqXHR){
+		var testData = data[0][0];
+		var relatedData = data[1];
+		
+		document.getElementById('name').value = testData["name"];
+		document.getElementById('teacher').value = testData["teacher"];
+		document.getElementById('teacher').teacherId = testData["teacher_id"];
+		
+		for(var i=0;i<relatedData.length;i++){
+			var relatedItem = relatedData[i];
+			addClassMemberRow([relatedItem]);
+		}
+	}
+	
+	function returnModalResult(modalName, row){
+		if(modalName == 'teacherFrame'){
+			closeModalById('teacherModal');
+			sendRequest({action:"get User", their_id: row.id}, setTeacher);
+		}else if(modalName == 'studentFrame'){
+			closeModalById('studentModal');
+			sendRequest({action:"get User", their_id: row.id}, addClassMemberRow_modal);
+		}
+	}
+	
+	//callbacks
+	function afterClassCreated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=classes';
+	}
+	function afterClassUpdated(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=classes';
+	}
+	function afterClassDeleted(){
+		frameElement.src = 'Client/pages/searchGrid.html?table=classes';
+	}
+	function setRatingsButtonHTML(data){
+		ratingCellHTML = '';
+		ratingCellHTML = '<div class="dropdown">'+
+								'<button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select Rating</button>'+
+								'<div class="dropdown-menu" aria-labelledby="roleDropdownBtn">';
+		for(var i=0;i<data.length;i++){
+			ratingCellHTML += '<a id="'+data[i].id+'" class="dropdown-item" onclick="setBootstrapButtonTextAndIdBySelect(this,this.innerText,this.id)">'+ data[i].Name + '</a>';
+		}
+		ratingCellHTML += '</div></div>';
+	}
+	function setTeacher(data, isNew){
+		var teacher = data[0];
+		var teacherEl = document.getElementById('teacher');
+		teacherEl.teacherId = teacher.id;
+		teacherEl.value = teacher.firstname + ' ' + teacher.lastname;
+	}
+	function addClassMemberRow_modal(data, isNew){ //if isNew, data is user. if notNew, data is class_member
+		var relatedItem = data[0];
+		var row = document.createElement('tr');
+		if(isNew){
+			row.student_id = relatedItem.id;
+		}else{
+			row.student_id = relatedItem.student_id;
+		}
+		var name = document.createElement('td');
+		name.innerText = relatedItem.firstname + ' ' + relatedItem.lastname;
+		row.appendChild(name);	
+		
+		var rating = document.createElement('td');
+		row.appendChild(rating);
+		rating.innerHTML = ratingCellHTML;		
+		
+		if(role != 'student' && role != 'admin'){
+			rating.firstElementChild.firstElementChild.setAttribute('data-toggle','');
+		}
+
+		if(!isNew){
+			rating.getElementsByTagName('button')[0].innerText = relatedItem.rating;
+			rating.getElementsByTagName('button')[0].id = relatedItem.rating_id;
+			row.id = relatedItem.id;
+			row.student_id = relatedItem.student_id;
+		}
+		
+		var remove = document.createElement('td');
+		var removeBtn = document.createElement('button');
+		removeBtn.className = 'btn btn-danger';
+		removeBtn.innerText = 'Remove';
+		removeBtn.addEventListener('click', function(){ deleteClassMemberRow(this); });
+		remove.appendChild(removeBtn);
+		row.appendChild(remove);
+		
+		document.getElementById('formTable').appendChild(row);
+	}
+	function addClassMemberRow(data, isNew){ //if isNew, data is user. if notNew, data is class_member
+		var relationship = data[0];
+		var row = document.createElement('tr');
+		if(isNew){
+			row.student_id = relationship.id;
+		}else{
+			row.student_id = relationship.student_id;
+		}
+		var name = document.createElement('td');
+		name.innerText = relationship.name;
+		row.appendChild(name);	
+		
+		var rating = document.createElement('td');
+		row.appendChild(rating);
+		rating.innerHTML = ratingCellHTML;		
+		
+		if(role != 'student' && role != 'admin'){
+			rating.firstElementChild.firstElementChild.setAttribute('data-toggle','');
+		}
+
+		if(!isNew){
+			rating.getElementsByTagName('button')[0].innerText = relationship.rating;
+			rating.getElementsByTagName('button')[0].id = relationship.difficulty_id;
+			row.id = relationship.id;
+			row.student_id = relationship.student_id;
+		}
+		
+		var remove = document.createElement('td');
+		var removeBtn = document.createElement('button');
+		removeBtn.className = 'btn btn-danger';
+		removeBtn.innerText = 'Remove';
+		removeBtn.addEventListener('click', function(){ deleteClassMemberRow(this); });
+		remove.appendChild(removeBtn);
+		row.appendChild(remove);
+		
+		document.getElementById('formTable').appendChild(row);
+	}
+	
+	function deleteClassMemberRow(btn){
+		if(role != 'teacher' && role != 'admin'){
+			top.throwError('You do not have the permissions to delete student data');
+		}
+		var row = btn.parentElement.parentElement;
+		var rowId = row.id;
+		row.parentElement.removeChild(row);
+		if(rowId){
+			relationshipsToDelete.push(row.id);
+		}
+	}
+</script>
+	<div class="modal fade" id="studentModal" tabindex="-1" role="dialog" aria-labelledby="studentModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="studentModalName">Class Members</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div id="studentModal-body" class="modal-body">
+			<iframe id="studentFrame" src="searchGrid.html?table=users&modal=true" style="width:100%;height:400px"></iframe>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-primary" onclick="addFieldFromModal('student')" data-dismiss="modal">Add Class Member</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+	<div class="modal fade" id="teacherModal" tabindex="-1" role="dialog" aria-labelledby="teacherModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="teacherModalName">Select a Teacher</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div id="teacherModal-body" class="modal-body">
+			<iframe id="teacherFrame" src="searchGrid.html?table=users&modal=true" style="width:100%;height:400px"></iframe>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-primary" onclick="addFieldFromModal('testQuestion')" data-dismiss="modal">Select Teacher</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+</html>
