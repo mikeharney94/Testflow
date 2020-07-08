@@ -1,37 +1,55 @@
 create database testflow;
 use testflow;
 
+# Users for user access, role determines user permissions
 create TABLE USER (id varchar (255), username varchar (255), firstname varchar (255), lastname varchar (255), role varchar (255), password varchar (255));
 ALTER TABLE user
 ADD PRIMARY KEY (id);
 
+# Questions are pages of fields for students to fill out upon taking a Test
+# They are made up of QuestionComponents in a one to many relationship
 create TABLE Question (id varchar (255), name varchar (255), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
 ALTER TABLE question
 ADD PRIMARY KEY (id);
 
+# Ratings allow custom difficulty levels for teachers to specify student and question difficulty levels
 create TABLE Rating (id varchar (255), name varchar (64), value varchar(64), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
 ALTER TABLE rating
 ADD PRIMARY KEY (id);
 
+# Tests are sets of questions
+# They are made up of TestQuestions in a many to many relationship
 create TABLE Test (id varchar(255), name varchar(64), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
 ALTER TABLE Test
 Add primary key (id);
 
+# TestQuestions are pointers from a parent Test to its children Questions
+# These have configurable expertise thresholds (rating_id + operator(>,<,=)), and sort order
 create TABLE TestQuestion (id varchar(255), test_id varchar(255), question_id varchar(255), rating_id varchar(255), operator varchar(32), order_number varchar(4),  foreign key (test_id) REFERENCES Test(id), foreign key (question_id) REFERENCES Question(id), foreign key (rating_id) REFERENCES Rating(id));
 alter table testquestion
 add primary key(id);
 
+# QuestionComponents are individual fields that can appear on a Question page
+# These are designed to be modular for any Component type (Multiple Choice, Line Graph, Text Entry, etc)
 create TABLE QuestionComponent (id varchar(255), name varchar(64), type varchar(64), content varchar(255), answer varchar(255), weight varchar(8), x varchar(8), y varchar(8), questionId varchar(64),  foreign key (questionId) REFERENCES Question(id));
 ALTER TABLE questioncomponent
 ADD PRIMARY KEY (id);
 
+# Classes contain a teacher and multiple students
 create TABLE Class (id varchar(255), name varchar(64), teacher_id varchar(64), foreign key (teacher_id) REFERENCES User(id));
 ALTER TABLE Class
 ADD PRIMARY KEY (id);
 
+# ClassMembers are pointers from a parent Class to its children Students(Users)
+# The difficulty_id allows admins and teachers to specify a student's skill in a class. This can determine which questions appear on a test for that student
 create TABLE ClassMember (id varchar(255), class_id varchar(64), student_id varchar(64), difficulty_id varchar(64), foreign key (class_id) REFERENCES Class(id), foreign key (student_id) REFERENCES User(id), foreign key (difficulty_id) REFERENCES Rating(id));
 ALTER TABLE ClassMember
 ADD PRIMARY KEY (id);
 
 INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ("5b2ffb06-a8ec-45d8-b7c7-70aa8710a27d", 'admin', 'Testflow', 'Admin', 'admin', 'admin');
 INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ('dbcce796-aef6-49d1-ad26-89d908fb3d6f', 'student1', 'My', 'Student', 'student', 'student');
+
+/* TODO:
+TestAssignment - Allows the assignment of tests to a user. This will also keep track of test session and final grade information
+TestAnswer - Tracks the user's answer to a QuestionComponent. A comparision to the QuestionComponent will be used for grading
+*/
