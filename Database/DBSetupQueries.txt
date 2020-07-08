@@ -1,38 +1,37 @@
 create database testflow;
 use testflow;
+
 create TABLE USER (id varchar (255), username varchar (255), firstname varchar (255), lastname varchar (255), role varchar (255), password varchar (255));
-create TABLE Question (id varchar (255), name varchar (255), created_by_id varchar(255));
-create TABLE Rating (id varchar (255), name varchar (64), value varchar(64), created_by_id varchar(255));
-
-create TABLE Test (id varchar(255), name varchar(64), created_by_id varchar(255));
-create TABLE TestQuestion (id varchar(255), test_id varchar(255), question_id varchar(255), rating_id varchar(255), operator varchar(32), order_number varchar(4));
-
-create TABLE QuestionComponent (id varchar(255), name varchar(64), type varchar(64), content varchar(255), answer varchar(255), weight varchar(8), x varchar(8), y varchar(8), questionId varchar(64));
-INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ("5b2ffb06-a8ec-45d8-b7c7-70aa8710a27d", 'admin', 'Testflow', 'Admin', 'admin', 'admin');
-INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ('dbcce796-aef6-49d1-ad26-89d908fb3d6f', 'student1', 'My', 'Student', 'student', 'student');
-
-create TABLE Class (id varchar(255), name varchar(64), teacher_id varchar(64));
-ALTER TABLE Class
-ADD PRIMARY KEY (id);
-
-create TABLE ClassMember (id varchar(255), class_id varchar(64), student_id varchar(64), difficulty_id varchar(64));
-ALTER TABLE ClassMember
-ADD PRIMARY KEY (id);
-
-ALTER TABLE Test
-Add primary key (id);
-
-alter table testquestion
-add primary key(id);
-
 ALTER TABLE user
 ADD PRIMARY KEY (id);
 
-ALTER TABLE rating
-ADD PRIMARY KEY (id);
-
+create TABLE Question (id varchar (255), name varchar (255), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
 ALTER TABLE question
 ADD PRIMARY KEY (id);
 
+create TABLE Rating (id varchar (255), name varchar (64), value varchar(64), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
+ALTER TABLE rating
+ADD PRIMARY KEY (id);
+
+create TABLE Test (id varchar(255), name varchar(64), created_by_id varchar(255), foreign key (created_by_id) REFERENCES User(id));
+ALTER TABLE Test
+Add primary key (id);
+
+create TABLE TestQuestion (id varchar(255), test_id varchar(255), question_id varchar(255), rating_id varchar(255), operator varchar(32), order_number varchar(4),  foreign key (test_id) REFERENCES Test(id), foreign key (question_id) REFERENCES Question(id), foreign key (rating_id) REFERENCES Rating(id));
+alter table testquestion
+add primary key(id);
+
+create TABLE QuestionComponent (id varchar(255), name varchar(64), type varchar(64), content varchar(255), answer varchar(255), weight varchar(8), x varchar(8), y varchar(8), questionId varchar(64),  foreign key (questionId) REFERENCES Question(id));
 ALTER TABLE questioncomponent
 ADD PRIMARY KEY (id);
+
+create TABLE Class (id varchar(255), name varchar(64), teacher_id varchar(64), foreign key (teacher_id) REFERENCES User(id));
+ALTER TABLE Class
+ADD PRIMARY KEY (id);
+
+create TABLE ClassMember (id varchar(255), class_id varchar(64), student_id varchar(64), difficulty_id varchar(64), foreign key (class_id) REFERENCES Class(id), foreign key (student_id) REFERENCES User(id), foreign key (difficulty_id) REFERENCES Rating(id));
+ALTER TABLE ClassMember
+ADD PRIMARY KEY (id);
+
+INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ("5b2ffb06-a8ec-45d8-b7c7-70aa8710a27d", 'admin', 'Testflow', 'Admin', 'admin', 'admin');
+INSERT INTO user (id, username, firstname, lastname, role, password) VALUES ('dbcce796-aef6-49d1-ad26-89d908fb3d6f', 'student1', 'My', 'Student', 'student', 'student');
