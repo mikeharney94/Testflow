@@ -87,9 +87,12 @@
 	}
 	
 	function fileUploadIsComplete(fileUploadSetId){
-		var fileFields = document.getElementsByClassName('fileField');
-		for(var i=0; i < fileFields.length; i++){
-			if(fileFields[i].fileUploadSetId != fileUploadSetId){
+		var fileFieldsForLoading = document.getElementsByClassName('fileAdded');
+		if(fileFieldsForLoading.length){
+			fileFieldsForLoading = fileFieldsForLoading.concat(document.getElementsByClassName('fileUpdated'));
+		}
+		for(var i=0; i < fileFieldsForLoading.length; i++){
+			if(fileFieldsForLoading[i].fileUploadSetId != fileUploadSetId){
 				return false;
 			}
 		}
@@ -228,7 +231,7 @@
 	}
 	
 	function afterQuestionDeleted(){
-		//TODO delete files
+		top.displayNotification('The question has been deleted successfully');
 	}
   </script>
 </head>

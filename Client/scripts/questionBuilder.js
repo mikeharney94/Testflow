@@ -150,6 +150,8 @@ function loadFile(event){
 	if(fieldDiv.id){
 		fieldDiv.classList.add('fileUpdated');
 		fieldDiv.originalFileName = event.target.files[0].name;
+	}else{
+		fieldDiv.classList.add('fileAdded');
 	}
 	var image = fieldDiv.getElementsByTagName('img')[0];
 	/*var extension = event.target.files[0].name.split('.')[1];
