@@ -239,6 +239,9 @@
 		frameElement.src = 'Client/pages/searchGrid.html?table=classes';
 	}
 	function setRatingsButtonHTML(data){
+		if(!data.length){
+			top.displayNotification('No ratings exist yet to specify experience levels');
+		}
 		ratingCellHTML = '';
 		ratingCellHTML = '<div class="dropdown">'+
 								'<button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdownBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select Rating</button>'+
