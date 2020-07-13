@@ -90,8 +90,10 @@ app.post('/request',function(req,res){
 				if(err){ throw err; }
 				conn.query(permissionValidationString, function (err, result, fields) {
 					if (err){
-						conn.rollback(function(){
-							throw err;
+						conn.rollback();
+						return res.status(400).json({
+							status: 'error',
+							message: err.toString()
 						});
 					}
 					debugger;
@@ -117,8 +119,10 @@ app.post('/request',function(req,res){
 					//get result
 					conn.query(queryString, function (err, result, fields) {
 						if (err){
-							conn.rollback(function(){
-								throw err;
+							conn.rollback();
+							return res.status(400).json({
+								status: 'error',
+								message: err.toString()
 							});
 						}
 						conn.commit(function(err) {
