@@ -20,6 +20,7 @@
 	<script src="../scripts/generalLibrary.js"></script>
 	<script src="../scripts/draggeable.js"></script>
 	<script src="../scripts/lineGraphGenerator.js"></script>
+	<script src="../scripts/questions.js"></script>
 	<script src="..\scripts\requestSender.js"></script>
   
 
@@ -52,18 +53,6 @@
 		});
 	}
 	updateDraggables();
-	
-	function getAllFieldComponents(getNewFields){
-		var fields = document.getElementsByClassName('card');
-		var components = [];
-		for(var i=0;i<fields.length;i++){
-			var component_i = fieldToComponent(fields[i]);
-			if(component_i && getNewFields == !component_i.id){
-				components.push(component_i);
-			}
-		}
-		return components;
-	}
 	
 	function addMainQuestion(fileUploadSetId){
 		setTimeout(function(){
@@ -185,13 +174,6 @@
 				questionId: questionId
 			}, afterQuestionDeleted);	
 		}
-	}
-	
-	function deleteFile(filename){
-		sendRequest({
-			action:'delete File',
-			filename: filename
-		});	
 	}
 	
 	function createUUID() {
