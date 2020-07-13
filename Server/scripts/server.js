@@ -13,14 +13,12 @@ var fileStoreDir = '../../FileStore';
 /*Setup*/
 var storage =  multer.diskStorage({
   destination: function (req, file, callback) {
-	debugger;
 	if(!fs.existsSync(fileStoreDir)){
 		fs.mkdirSync(fileStoreDir);
 	}
     callback(null, fileStoreDir);
   },
   filename: function (req, file, callback) {
-	debugger;
 	var extension = file.originalname.substr(file.originalname.lastIndexOf('.'), file.originalname.length);
 	req.newFileName = req.newFileId + extension;
 	callback(null, req.newFileName); //second arg is name of new file
@@ -39,7 +37,6 @@ app.use(function (req, res, next) {
 });
 
 app.post('/login', function(req,res){
-	debugger;
 	var requestData = req.body;
 	var db = settings.getSettings().database;
 	var baseSQL = 'SELECT * FROM user WHERE username=? AND password=?';
@@ -96,7 +93,6 @@ app.post('/request',function(req,res){
 							message: err.toString()
 						});
 					}
-					debugger;
 					if(result[0]['result'] != 'true'){
 						conn.rollback();
 						return res.status(400).json({
