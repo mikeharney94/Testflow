@@ -9,4 +9,4 @@ The heart of this application is the Question Builder, which allows teachers to 
 
 This allows for a Test building application that scales as far as your imagination and skills with HTML
 
-The program also deals with User Management, and creating Classes of students. In the future, this application will also be able to assign, take, and grade tests
+The program also deals with User Management, and creating Classes of students. In the future, this application will also be able to take, and grade tests
