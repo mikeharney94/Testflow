@@ -29,8 +29,13 @@
     </div>
 </body>
 <script>
+//when the user first logs in
 function loginInit(){
 	document.getElementById('hi_name').innerText = 'Hi ' + top.testflow.user.firstname + ', ';
+}
+//if page is loaded after the initial login
+if(top.testflow){
+	loginInit();
 }
 </script>
 </html>
