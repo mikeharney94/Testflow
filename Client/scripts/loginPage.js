@@ -18,6 +18,7 @@ function login(){
 					top.document.getElementById('fullname').setAttribute("href","Client/pages/users.html?id="+data[0].id);
 					top.document.getElementById('mainContent').style.display='';
 					top.document.getElementById('loginFrame').style.display='none';
+					top.document.getElementById('mainFrame').contentWindow.loginInit();
 					
 					document.getElementById('password').value = '';
 				},
