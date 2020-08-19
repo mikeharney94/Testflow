@@ -358,7 +358,7 @@ exports.getPermissionValidationString = function(action,requestData){
 			inserts = [requestData.questionId, requestData.username, requestData.password];
 			break;
 		case 'searchGrid ratings':
-			baseSQL = 'SELECT if(role="admin","true",NULL) AS result,role FROM user WHERE username=? AND password=?';
+			baseSQL = 'SELECT if(role IN ("admin","teacher"),"true",NULL) AS result,role FROM user WHERE username=? AND password=?';
 			inserts = [requestData.username, requestData.password];
 			break;
 		case 'add Rating':
