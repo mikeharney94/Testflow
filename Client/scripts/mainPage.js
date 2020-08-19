@@ -1,6 +1,7 @@
 function logout(){
 	document.getElementById('mainContent').style.display='none';
 	document.getElementById('loginFrame').style.display='';
+	document.getElementById('mainFrame').src = 'Client/pages/home.html'
 
 	unloadNavbarByRole(testflow.user.role);	
 	testflow = undefined;
