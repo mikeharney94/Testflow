@@ -153,7 +153,7 @@
 		for(var i=0;i<existingComponents.length;i++){
 			var comp_i = existingComponents[i];
 			var original_comp_i = originalComponents.get(comp_i.id);
-			if(isComponentDifferent(comp_i,original_comp_i)){
+			if(comp_i.isComponentDifferent(original_comp_i)){
 				componentsToUpdate.push(comp_i);
 			}
 		}
@@ -195,7 +195,7 @@
 		document.getElementById('name').innerText = originalName;
 		for(var i=0;i<components.length;i++){
 			var component_i = components[i];
-			componentToField(component_i);
+			Component.componentToField(component_i);
 			originalComponents.set(component_i.id, component_i);
 		}
 	}

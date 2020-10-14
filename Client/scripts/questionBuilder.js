@@ -28,11 +28,11 @@ function editWithModal(editBtn,type){
 	clearModal(type);
 	switch(type){
 		case 'multipleChoiceModal':
-			component = multipleChoiceFieldToComponent(card);
+			component = Component.fieldToComponent(card);
 			componentToMultipleChoiceModal(component);
 			break;
 		case 'lineGraphModal':
-			component = lineGraphFieldToComponent(card);
+			component = Component.fieldToComponent(card);
 			componentToLineGraphModal(component);
 			break;			
 	}

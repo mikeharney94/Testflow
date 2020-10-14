@@ -44,7 +44,7 @@ function getAllFieldComponents(getNewFields){
 	var fields = document.getElementsByClassName('card');
 	var components = [];
 	for(var i=0;i<fields.length;i++){
-		var component_i = fieldToComponent(fields[i]);
+		var component_i = Component.fieldToComponent(fields[i]);
 		if(component_i && getNewFields == !component_i.id){
 			components.push(component_i);
 		}

@@ -80,7 +80,7 @@ app.post('/request',function(req,res){
 			database: 'testflow'
 		});		
 		conn.connect();
-		if(/*!queryString.isError && */!permissionValidationString.isError){
+		if(!permissionValidationString.isError){
 			//permission check
 			
 			conn.beginTransaction(function(err) {

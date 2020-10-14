@@ -53,13 +53,13 @@ function addFieldFromModal(type){
 	switch(type){
 		case 'multipleChoice':
 			component = multipleChoiceModalToComponent();
-			multipleChoiceComponentToField(component);
+			Component.componentToField(component);
 			break;
 		case 'lineGraph':
 			if(validateLineGraphCoordinateModalInputs()){
 				modalsToNotClear.delete('lineGraphModal');
 				component = lineGraphModalToComponent();
-				lineGraphComponentToField(component);
+				Component.componentToField(component);
 			}
 			break;
 	}
